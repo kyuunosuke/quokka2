@@ -2,133 +2,24 @@ import { useState, useEffect } from "react";
 import CompetitionCard, { Competition } from "./CompetitionCard";
 import CompetitionFilters from "./CompetitionFilters";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "../../../supabase/supabase";
+import { useAuth } from "../../../supabase/auth";
+import { Button } from "@/components/ui/button";
 
 interface CompetitionGridProps {
   initialCompetitions?: Competition[];
   isLoading?: boolean;
 }
 
-const mockCompetitions: Competition[] = [
-  {
-    id: "1",
-    title: "Summer Photography Contest",
-    imageUrl:
-      "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&q=80",
-    category: "Photography",
-    deadline: "Jul 15, 2024",
-    prizeValue: "$2,500",
-    difficulty: "easy",
-    requirements:
-      "Submit up to 3 original summer-themed photographs taken within the last 6 months.",
-    rules:
-      "All entries must be original work. No watermarks or signatures on images.",
-  },
-  {
-    id: "2",
-    title: "Mobile App Innovation Challenge",
-    imageUrl:
-      "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=80",
-    category: "Technology",
-    deadline: "Aug 30, 2024",
-    prizeValue: "$10,000",
-    difficulty: "hard",
-    requirements:
-      "Develop a working prototype of a mobile app that addresses a social or environmental issue.",
-    rules:
-      "Apps must be original and not previously published on any app store.",
-  },
-  {
-    id: "3",
-    title: "Sustainable Fashion Design",
-    imageUrl:
-      "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80",
-    category: "Fashion",
-    deadline: "Sep 10, 2024",
-    prizeValue: "$5,000",
-    difficulty: "medium",
-    requirements:
-      "Create a fashion design using sustainable or recycled materials.",
-    rules:
-      "Designs must be original and include a written explanation of sustainability features.",
-  },
-  {
-    id: "4",
-    title: "Short Story Competition",
-    imageUrl:
-      "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&q=80",
-    category: "Writing",
-    deadline: "Jul 20, 2024",
-    prizeValue: "$1,500",
-    difficulty: "medium",
-    requirements:
-      "Write a short story (max 3,000 words) on the theme of 'New Beginnings'.",
-    rules: "Stories must be original and not previously published elsewhere.",
-  },
-  {
-    id: "5",
-    title: "Culinary Innovation Award",
-    imageUrl:
-      "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&q=80",
-    category: "Food",
-    deadline: "Aug 5, 2024",
-    prizeValue: "$3,000",
-    difficulty: "easy",
-    requirements:
-      "Create an original recipe using a specific seasonal ingredient (to be announced).",
-    rules:
-      "Recipe must be original and include high-quality photos of the finished dish.",
-  },
-  {
-    id: "6",
-    title: "Game Development Hackathon",
-    imageUrl:
-      "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&q=80",
-    category: "Technology",
-    deadline: "Oct 15, 2024",
-    prizeValue: "$7,500",
-    difficulty: "hard",
-    requirements:
-      "Develop a playable game prototype in 48 hours based on a provided theme.",
-    rules: "All code and assets must be created during the hackathon period.",
-  },
-  {
-    id: "7",
-    title: "Urban Mural Design Contest",
-    imageUrl:
-      "https://images.unsplash.com/photo-1551913902-c92207136625?w=800&q=80",
-    category: "Art",
-    deadline: "Sep 30, 2024",
-    prizeValue: "$4,000",
-    difficulty: "medium",
-    requirements:
-      "Design a mural concept for a specific urban location (details provided upon registration).",
-    rules:
-      "Design must be original and consider the cultural context of the location.",
-  },
-  {
-    id: "8",
-    title: "Fitness Challenge",
-    imageUrl:
-      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80",
-    category: "Health",
-    deadline: "Ongoing",
-    prizeValue: "$1,000 Monthly",
-    difficulty: "easy",
-    requirements:
-      "Complete a series of fitness challenges and document your progress.",
-    rules:
-      "Participants must submit weekly updates with photo or video evidence.",
-  },
-];
-
 const CompetitionGrid = ({
-  initialCompetitions = mockCompetitions,
-  isLoading = false,
+  initialCompetitions = [],
+  isLoading: initialLoading = false,
 }: CompetitionGridProps) => {
   const [competitions, setCompetitions] =
     useState<Competition[]>(initialCompetitions);
   const [filteredCompetitions, setFilteredCompetitions] =
     useState<Competition[]>(initialCompetitions);
+  const [isLoading, setIsLoading] = useState(initialLoading);
   const [filters, setFilters] = useState({
     category: "all",
     difficulty: "all",
@@ -136,7 +27,54 @@ const CompetitionGrid = ({
     deadline: "all",
   });
   const { toast } = useToast();
+  const { user } = useAuth();
 
+  // Fetch competitions from Supabase
+  useEffect(() => {
+    const fetchCompetitions = async () => {
+      setIsLoading(true);
+      try {
+        // Call the edge function to get competitions with filters
+        const { data, error } = await supabase.functions.invoke(
+          "supabase-functions-get-competitions",
+          {
+            body: { filters },
+          },
+        );
+
+        if (error) throw error;
+
+        // Transform the data to match our Competition interface
+        const transformedData: Competition[] = data.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          imageUrl: item.image_url,
+          category: item.category,
+          deadline: item.deadline,
+          prizeValue: item.prize_value,
+          difficulty: item.difficulty,
+          requirements: item.requirements,
+          rules: item.rules,
+        }));
+
+        setCompetitions(transformedData);
+        setFilteredCompetitions(transformedData);
+      } catch (error) {
+        console.error("Error fetching competitions:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load competitions. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompetitions();
+  }, [toast]);
+
+  // Apply filters
   useEffect(() => {
     // Apply filters
     let result = [...competitions];
@@ -203,18 +141,72 @@ const CompetitionGrid = ({
     setFilters(newFilters);
   };
 
-  const handleEnterCompetition = (id: string) => {
-    toast({
-      title: "Competition Entry",
-      description: `You're entering competition #${id}. Redirecting to entry form...`,
-    });
+  const handleEnterCompetition = async (id: string) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to enter this competition.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "supabase-functions-enter-competition",
+        {
+          body: { competitionId: id },
+        },
+      );
+
+      if (error) throw error;
+
+      toast({
+        title: "Competition Entry",
+        description: `You've successfully entered competition #${id}. Good luck!`,
+      });
+    } catch (error) {
+      console.error("Error entering competition:", error);
+      toast({
+        title: "Error",
+        description: "Failed to enter competition. Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSaveCompetition = (id: string) => {
-    toast({
-      title: "Competition Saved",
-      description: `Competition #${id} has been saved to your bookmarks.`,
-    });
+  const handleSaveCompetition = async (id: string) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to save this competition.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "supabase-functions-save-competition",
+        {
+          body: { competitionId: id },
+        },
+      );
+
+      if (error) throw error;
+
+      toast({
+        title: "Competition Saved",
+        description: `Competition #${id} has been saved to your bookmarks.`,
+      });
+    } catch (error) {
+      console.error("Error saving competition:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save competition. Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
