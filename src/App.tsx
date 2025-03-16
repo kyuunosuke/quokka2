@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useRoutes } from "react-router-dom";
 import routes from "tempo-routes";
 import LoginForm from "./components/auth/LoginForm";
 import SignUpForm from "./components/auth/SignUpForm";
+import AdminLoginForm from "./components/auth/AdminLoginForm";
 import Dashboard from "./components/pages/dashboard";
 import Success from "./components/pages/success";
 import Home from "./components/pages/home";
@@ -33,6 +34,7 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/signup" element={<SignUpForm />} />
+        <Route path="/admin-login" element={<AdminLoginForm />} />
         <Route path="/competitions" element={<Competitions />} />
         <Route
           path="/dashboard"

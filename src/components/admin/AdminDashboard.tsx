@@ -75,13 +75,14 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
-          <TabsContent value="active" className="mt-0">
-            <CompetitionList isArchived={false} onEdit={handleEdit} />
-          </TabsContent>
-
-          <TabsContent value="archived" className="mt-0">
-            <CompetitionList isArchived={true} onEdit={handleEdit} />
-          </TabsContent>
+          <div className="mt-4">
+            {activeTab === "active" && (
+              <CompetitionList isArchived={false} onEdit={handleEdit} />
+            )}
+            {activeTab === "archived" && (
+              <CompetitionList isArchived={true} onEdit={handleEdit} />
+            )}
+          </div>
         </>
       )}
     </div>

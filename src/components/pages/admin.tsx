@@ -11,7 +11,7 @@ const AdminPage = () => {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/login");
+      navigate("/admin-login");
     }
   }, [user, loading, navigate]);
 
@@ -20,7 +20,7 @@ const AdminPage = () => {
   }
 
   if (!user) {
-    return null; // Will redirect to login
+    return null; // Will redirect to admin login
   }
 
   return (
