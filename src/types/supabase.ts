@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      competitions: {
+        Row: {
+          category: string
+          created_at: string | null
+          deadline: string
+          difficulty: string
+          external_url: string | null
+          id: string
+          image_url: string
+          is_archived: boolean | null
+          is_custom_game: boolean | null
+          prize_value: string
+          requirements: string
+          rules: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          deadline: string
+          difficulty: string
+          external_url?: string | null
+          id?: string
+          image_url: string
+          is_archived?: boolean | null
+          is_custom_game?: boolean | null
+          prize_value: string
+          requirements: string
+          rules: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          deadline?: string
+          difficulty?: string
+          external_url?: string | null
+          id?: string
+          image_url?: string
+          is_archived?: boolean | null
+          is_custom_game?: boolean | null
+          prize_value?: string
+          requirements?: string
+          rules?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string | null
