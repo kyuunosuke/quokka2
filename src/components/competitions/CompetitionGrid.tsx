@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import CompetitionCard, { Competition } from "./CompetitionCard";
 import CompetitionFilters from "./CompetitionFilters";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "../../../supabase/supabase";
+import { Button } from "@/components/ui/button";
 
 interface CompetitionGridProps {
   initialCompetitions?: Competition[];
@@ -122,13 +124,14 @@ const mockCompetitions: Competition[] = [
 ];
 
 const CompetitionGrid = ({
-  initialCompetitions = mockCompetitions,
-  isLoading = false,
+  initialCompetitions = [],
+  isLoading: initialLoading = false,
 }: CompetitionGridProps) => {
-  const [competitions, setCompetitions] =
-    useState<Competition[]>(initialCompetitions);
-  const [filteredCompetitions, setFilteredCompetitions] =
-    useState<Competition[]>(initialCompetitions);
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [filteredCompetitions, setFilteredCompetitions] = useState<
+    Competition[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(initialLoading);
   const [filters, setFilters] = useState({
     category: "all",
     difficulty: "all",
@@ -136,6 +139,47 @@ const CompetitionGrid = ({
     deadline: "all",
   });
   const { toast } = useToast();
+
+  const fetchCompetitions = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("competitions")
+        .select("*")
+        .eq("is_archived", false);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Transform the data to match the Competition interface
+        const transformedData = data.map((item) => ({
+          id: item.id,
+          title: item.title,
+          imageUrl: item.image_url,
+          category: item.category,
+          deadline: item.deadline,
+          prizeValue: item.prize_value,
+          difficulty: item.difficulty as "easy" | "medium" | "hard",
+          requirements: item.requirements,
+          rules: item.rules,
+        }));
+        setCompetitions(transformedData);
+      } else {
+        // Use mock data if no competitions are found in the database
+        setCompetitions(mockCompetitions);
+      }
+    } catch (error) {
+      console.error("Error fetching competitions:", error);
+      // Fallback to mock data on error
+      setCompetitions(mockCompetitions);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompetitions();
+  }, []);
 
   useEffect(() => {
     // Apply filters

@@ -1,10 +1,14 @@
 import { useState } from "react";
 import CompetitionGrid from "../competitions/CompetitionGrid";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ShieldCheck } from "lucide-react";
+import { useAuth } from "../../../supabase/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function CompetitionsPage() {
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleRefresh = () => {
     setLoading(true);
@@ -12,6 +16,10 @@ export default function CompetitionsPage() {
     setTimeout(() => {
       setLoading(false);
     }, 1500);
+  };
+
+  const handleAdminClick = () => {
+    navigate("/admin");
   };
 
   return (
@@ -33,6 +41,16 @@ export default function CompetitionsPage() {
             <a href="/dashboard" className="hover:text-gray-500">
               Dashboard
             </a>
+            {user && (
+              <Button
+                onClick={handleAdminClick}
+                variant="ghost"
+                className="hover:text-gray-500 flex items-center gap-1 p-0 h-auto font-light"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Admin
+              </Button>
+            )}
             <a href="/" className="hover:text-gray-500">
               About
             </a>
