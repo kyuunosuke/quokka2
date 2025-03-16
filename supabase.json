@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "serve": {
+      "port": 54321,
+      "runtimeVersion": "1.0"
+    }
+  }
+}
